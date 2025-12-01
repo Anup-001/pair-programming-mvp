@@ -81,6 +81,11 @@ npm run dev
 - Room appears full / immediate close:
 	- The backend limits concurrent connections per room (default 2) to prevent resource storms. Increase the limit in `backend/services/room_service.py` for local testing.
 
+**Future Improvements**
+- Can add User Authentication feature.
+- Real AI Autocompletion
+- Code Execution Feature
+
 **Development notes & recommendations**
 
 - For local testing without Postgres, set `DATABASE_URL` to `sqlite:///./dev.db` to avoid DB setup.
