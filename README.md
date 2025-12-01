@@ -1,114 +1,96 @@
-Real-Time Collaborative Pair-Programming Editor MVP
+Real-Time Collaborative Pair-Programming Editor — MVP
 
-This is the Minimum Viable Product (MVP) for a real-time collaborative code editor.
+This repository contains a small prototype of a real-time collaborative code editor:
 
-Features
+- Backend: FastAPI + WebSockets + SQLModel (Postgres)
+- Frontend: React (JSX) + minimal UI
+- Sync strategy: Last-write-wins (full-file sync on every change)
+- Mock AI autocomplete endpoint for suggestions
 
-Room Management: Users can create unique rooms or join existing rooms.
+**Getting Started**
 
-Real-Time Sync: Code changes are instantly synchronized between all connected users via WebSockets.
+- **Prerequisites:** `python` 3.8+, `node` + `npm`, and (optionally) `PostgreSQL`.
+- Recommended workflow: run backend and frontend in separate terminals.
 
-Persistence: Code state is saved to a PostgreSQL database, ensuring code remains even if the server restarts.
+**Backend (FastAPI)**
 
-Mock AI Autocomplete: A mock endpoint provides code suggestions (press Tab to accept).
+- Navigate to the backend folder and create a virtual environment (recommended):
 
-Architecture
-
-Component
-
-Technology
-
-Role
-
-Backend API
-
-FastAPI, Python, SQLModel
-
-REST endpoints for room creation and AI mock.
-
-Backend Persistence
-
-PostgreSQL
-
-Stores room data (room_id, code).
-
-Backend WS
-
-FastAPI WebSockets
-
-Manages real-time connections and broadcasts updates. Active connections are kept in in-memory (CONNECTION_DB).
-
-Frontend
-
-React (JSX), Tailwind CSS
-
-UI, implements debounce for AI, and manages the WebSocket connection.
-
-Sync Strategy
-
-Last-Write Wins (Full Sync)
-
-The entire file content is sent on every change for simplicity.
-
-Setup and Installation
-
-Prerequisites
-
-Python 3.8+
-
-Node.js & npm (for the frontend)
-
-PostgreSQL Server (running locally or remotely).
-
-A. PostgreSQL Setup
-
-Start your PostgreSQL server.
-
-Create a database named pair_coding_db.
-
-Ensure your connection details match the DATABASE_URL in backend/database.py (default: postgresql://postgres:password@localhost:5432/pair_coding_db).
-
-B. Backend Setup
-
-Navigate to the backend directory:
-
+```powershell
 cd backend
+python -m venv venv
+venv\Scripts\Activate.ps1
+```
 
+- Install dependencies:
 
-Install dependencies:
+```powershell
+python -m pip install -r requirements.txt
+```
 
-pip install -r requirements.txt
+- Configure the database (optional):
+	- By default the app reads `DATABASE_URL` from the environment. For quick local testing you can set it to a sqlite DB (no Postgres required):
 
+```powershell
+# quick local fallback (development only):
+setx DATABASE_URL "sqlite:///./dev.db"
+```
 
-Run the FastAPI server:
+- Start the server (from project root or `backend` directory):
 
-uvicorn main:app --reload --port 8000
+```powershell
+# from project root
+uvicorn backend.main:app --reload --port 8000
+```
 
+**Frontend (React)**
 
-Note: On startup, the main.py file will automatically connect to PostgreSQL and create the room table.
+- Install frontend deps and run dev server:
 
-C. Frontend Setup
-
-The frontend is a single React file. If you are using a standard development environment (like Vite/CRA), ensure frontend/src/App.jsx is your main component.
-
-Run the development server:
-
-# Assuming you are running a standard React setup
+```powershell
+cd frontend
+npm install
 npm run dev
+```
 
+- Open the app in the browser (default Vite port): `http://localhost:5173` or the URL shown by your dev server.
 
-How to Demo
+**Basic Usage / Demo**
 
-Open the frontend application in your browser (e.g., http://localhost:5173).
+- Click `Create New Room`. The frontend will POST to `/rooms` and navigate to `/room/{roomId}`.
+- Open a second tab (or another browser) and go to the same URL to see real-time sync.
+- Pause typing ~600ms to trigger the mocked autocomplete; press `Tab` to accept the suggestion.
 
-Click "Create New Room".
+**API endpoints**
 
-Copy the URL (which now contains the room ID, e.g., /room/abcd123).
+- `POST /rooms` — create a new room, returns `{ "roomId": "..." }`.
+- `POST /autocomplete` — mocked AI autocomplete, accepts `{ code, cursorPosition, language }`.
+- WebSocket: `ws://<host>/ws/{roomId}` — connects to a room and receives `initial_state` and `code_update` messages.
+- `GET /debug/rooms` — development helper: returns in-memory connection counts per room.
 
-Open a second browser tab (or incognito window) and paste the URL.
+**Troubleshooting**
 
-Type code in one editor; the changes will instantly reflect in the other.
+- WebSocket handshake 403 / rejected:
+	- Ensure the frontend origin is allowed. The backend reads `ALLOWED_ORIGINS` (comma-separated) and includes common localhost origins by default.
+	- Incognito/file contexts can send `Origin: null` — the default server config includes `null` for convenience.
 
-Pause typing for ~600ms to see the mock AI suggestion appear, then press Tab to insert the code.
+- Rapid reconnects / many connections:
+	- Dev servers with hot-reload (`--reload`) restart on code changes, causing connected clients to reconnect quickly.
+	- React StrictMode can mount components twice in development, which may open duplicate sockets. Use a single socket instance per tab (the frontend already includes connection guards but see code comments).
 
-Test Persistence: Stop the FastAPI server, restart it, and refresh the browser tabs—the code state will be reloaded from PostgreSQL.
+- Room appears full / immediate close:
+	- The backend limits concurrent connections per room (default 2) to prevent resource storms. Increase the limit in `backend/services/room_service.py` for local testing.
+
+**Development notes & recommendations**
+
+- For local testing without Postgres, set `DATABASE_URL` to `sqlite:///./dev.db` to avoid DB setup.
+- Disable `--reload` while testing long-lived WebSocket behavior to avoid reconnect storms.
+- Use `GET /debug/rooms` to inspect the server's in-memory connection counts.
+
+If you'd like, I can also:
+
+- Add a `docker-compose.yml` to run Postgres + backend quickly.
+- Provide a ready-made `.env.example` with `DATABASE_URL` and `ALLOWED_ORIGINS`.
+- Patch the frontend to add a safer single-socket pattern (prevents duplicate sockets in dev). 
+
+Thanks — open an issue or ask me to apply any of the optional improvements above.
