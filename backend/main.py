@@ -1,13 +1,20 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from routers import room_router, websocket_router
-from database import create_db_and_tables
+from dotenv import load_dotenv
+import pathlib
 import logging
+import os
 
+# Load .env from project root if present
+root = pathlib.Path(__file__).resolve().parents[1]
+env_path = root / '.env'
+if env_path.exists():
+    load_dotenv(env_path)
+
+from fastapi.middleware.cors import CORSMiddleware
+
+# Use package-qualified imports
+from backend.routers import room_router, websocket_router
+from backend.database import create_db_and_tables
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
@@ -18,13 +25,21 @@ app = FastAPI(
 
 # 1. CORS Configuration
 # Allow the frontend (running on a different port/origin) to connect
+allowed = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,null",
+)
+allowed_list = [o.strip() for o in allowed.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_list,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logging.info(f"CORS allowed origins: {allowed_list}")
 
 # 2. Include Routers
 app.include_router(room_router.router, tags=["Rooms and AI"], prefix="")

@@ -37,9 +37,13 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             return # Exit here, finally block handles session closure
 
         await websocket.accept()
-        
-        # Connect to in-memory store
-        room_service.connect(room_id, websocket)
+
+        # Connect to in-memory store. If connect() returns False it's because
+        # the room is full (or not initialized). Close the socket politely.
+        ok = room_service.connect(room_id, websocket)
+        if not ok:
+            await websocket.close(code=1001, reason="Room full or unavailable")
+            return
 
         # Send initial state
         initial_code = room.code
@@ -54,14 +58,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 if message.get("type") == "code_change":
                     new_code = message.get("code")
                     if new_code is not None:
-                        # 3. Update DB and broadcast (MUST be run in threadpool)
+                        # 3a. Persist update in DB in threadpool (sync DB op)
                         await run_in_threadpool(
-                            room_service.broadcast_code_update,
-                            session, 
-                            room_id, 
-                            new_code, 
-                            sender=websocket
+                            room_service.update_room_code,
+                            session,
+                            room_id,
+                            new_code,
                         )
+
+                        # 3b. Broadcast updated code to other connections (async)
+                        await room_service.broadcast_code_update(room_id, new_code, sender=websocket)
                 
             except json.JSONDecodeError:
                 print(f"Received non-JSON data: {data}")

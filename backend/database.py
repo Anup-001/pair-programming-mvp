@@ -1,14 +1,15 @@
 from typing import Generator, Any, Dict, Set, List
 from sqlmodel import Session, SQLModel, create_engine
 from fastapi import WebSocket
-import os # <--- THIS IMPORT IS THE FIX
+import os
+from dotenv import load_dotenv
+load_dotenv()  
 
 # --- 1. Database Configuration ---
 # Update this with your actual PostgreSQL connection details (Supabase or Docker).
 # If you are using Supabase, remember to replace YOUR_PASSWORD.
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:dGu-aeJZ&?RPXA2@db.hjmdkclkvdlbcvbcascc.supabase.co:5432/postgres"
+    "DATABASE_URL",
 )
 
 # Set connect_args={"check_same_thread": False} for SQLite, but not needed for PostgreSQL.

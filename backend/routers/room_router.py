@@ -1,12 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from schemas import RoomCreateResponse, AutocompleteRequest, AutocompleteResponse
-from services.room_service import room_service
-from database import get_session
+from backend.schemas import RoomCreateResponse, AutocompleteRequest, AutocompleteResponse
+from backend.services.room_service import room_service
+from backend.database import get_session, CONNECTION_DB
 
 router = APIRouter()
 
@@ -37,3 +34,9 @@ async def get_mock_autocomplete(request: AutocompleteRequest):
         suggestion=suggestion,
         detail="Mocked suggestion generated successfully."
     )
+
+
+# Development helper: show in-memory connection counts
+@router.get("/debug/rooms")
+def list_rooms_debug():
+    return {rid: len(conns) for rid, conns in CONNECTION_DB.items()}

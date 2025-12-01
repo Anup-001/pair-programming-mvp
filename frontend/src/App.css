@@ -40,3 +40,34 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Editor styles: a simple VS Code-like dark theme */
+.editor-container {
+  max-width: 100%;
+}
+.suggestion-box {
+  text-align: left;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.editor {
+  background: #1e1e1e; /* VS Code dark background */
+  color: #d4d4d4;      /* Default editor text */
+  border: 1px solid #2e2e2e;
+  caret-color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+  tab-size: 4;
+  white-space: pre-wrap;
+}
+.editor::placeholder {
+  color: #6a6a6a;
+}
+
+/* Make selection and focus look nicer */
+.editor:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  border-color: #5b21b6;
+}
+
+.editor ::selection { background: rgba(99,102,241,0.3); }
