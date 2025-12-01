@@ -1,4 +1,9 @@
-Real-Time Collaborative Pair-Programming Editor — MVP
+**Real-Time Collaborative Pair-Programming Editor — MVP**
+**Features**
+- Room Management: Users can create unique rooms or join existing rooms.
+- Real-Time Sync: Code changes are instantly synchronized between all connected users via WebSockets.
+- Persistence: Code state is saved to a PostgreSQL database, ensuring code remains even if the server restarts.
+- Mock AI Autocomplete: A mock endpoint provides code suggestions (press Tab to accept).
 
 This repository contains a small prototype of a real-time collaborative code editor:
 
