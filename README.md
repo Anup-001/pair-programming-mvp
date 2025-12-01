@@ -1,4 +1,5 @@
 **Real-Time Collaborative Pair-Programming Editor — MVP**
+
 **Features**
 - Room Management: Users can create unique rooms or join existing rooms.
 - Real-Time Sync: Code changes are instantly synchronized between all connected users via WebSockets.
